@@ -1,3 +1,6 @@
 node_modules
 .env
 .DS_Store
+.package-lock.json
+C:\Users\dwill\Desktop\projects\ecommerce-back-end\package-lock.json
+package-lock.json
