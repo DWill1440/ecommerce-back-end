@@ -27,7 +27,7 @@ ProductTag.init(
         type: DataTypes.INTEGER,
         references: {
           // This is a reference to another model
-          model: tag,
+          model: 'Tag',
      
           // This is the column name of the referenced model
           key: 'id'
