@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const sequelize = require("../../config/connection");
+// const sequelize = require("../../config/connection");
 const { Product, Category, Tag, ProductTag } = require("../../models");
 
 // The `/api/products` endpoint
@@ -9,19 +9,15 @@ router.get("/", (req, res) => {
   // find all products
   // be sure to include its associated Category and Tag data
   Product.findAll({
-    attributes: ["id", "product_name", "price", "stock"],
-    order: [["stock", "DESC"]],
     include: [
-      {
-        model: Category,
-        attributes: ["id"]
-      },
+      Category,
       {
         model: Tag,
-        attributes: ["id"]
-      }
+        through: ProductTag,
+      },
     ],
   })
+
     .then((ProductData) => res.json(ProductData))
     .catch((err) => {
       console.log(err);
@@ -35,20 +31,22 @@ router.get("/:id", (req, res) => {
   // be sure to include its associated Category and Tag data
   Product.findOne({
     where: {
-      id: req.params.id
+      id: req.params.id,
     },
-      attributes: ["id", "product_name", "price", "stock"],
     include: [
-      {
-        model: Category,
-        attributes: ["id"],
-      },
+      Category,
       {
         model: Tag,
-        attributes: ["id",'tag_name'],
+        through: ProductTag,
       },
     ],
-})
+  })
+    .then((products) => res.json(products))
+    .catch((err) => {
+      console.log(err);
+      res.status(400).json(err);
+    });
+});
 
 // create new product
 router.post("/", (req, res) => {
@@ -60,12 +58,7 @@ router.post("/", (req, res) => {
       tagIds: [1, 2, 3, 4]
     }
   */
-  Product.create({    
-      product_name: req.body.product_name,
-      price: req.body.price,
-      stock: req.body.stock,
-      tagIds: req.body.tagId
-    })
+  Product.create(req.body)
     .then((product) => {
       // if there's product tags, we need to create pairings to bulk create in the ProductTag model
       if (req.body.tagIds.length) {
@@ -85,7 +78,6 @@ router.post("/", (req, res) => {
       console.log(err);
       res.status(400).json(err);
     });
-  });
 });
 
 // update product
@@ -132,19 +124,19 @@ router.put("/:id", (req, res) => {
 
 router.delete("/:id", (req, res) => {
   // delete one product by its `id` value
-  Produ.destroy({
+  Product.destroy({
     where: {
-      id: req.params.id
-    }
+      id: req.params.id,
+    },
   })
-    .then(ProductData => {
+    .then((ProductData) => {
       if (!ProductData) {
-        res.status(404).json({ message: 'No product found with this id' });
+        res.status(404).json({ message: "No product found with this id" });
         return;
       }
       res.json(ProductData);
     })
-    .catch(err => {
+    .catch((err) => {
       console.log(err);
       res.status(500).json(err);
     });
